@@ -1,19 +1,26 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import { BrowserRouter, Link, Route, NavLink, Switch } from 'react-router-dom';
+import { BrowserRouter, Link, Route} from 'react-router-dom';
 import { createStore } from 'redux';
-import addTodo from './reducers/add'
+import taskList from './reducers/add';
+import {add,del,edt,cpl} from './actions/index'; //Вынес action's в отдельный фаил
 
-const store = createStore(addTodo)
+const store = createStore(taskList);
+
+const center = {width : '50%',marginLeft : 'auto',marginRight : 'auto'};
 
 const App = () => {
-    console.log(store.getState())
-    return (<div>
-        <Route exact path='/' render={() => <Menu />} />
-        <Route exact path='/list' render={() => <List />} />
-        <Route exact path='/add' render={() => <AddTask />} />
-    </div>)
+    return (
+        <div>
+            <Route exact path='/' render={() => <Menu />} />
+            <Route exact path='/list' render={() =>
+                <div>
+                    <List />
+                    <AddTask />
+                    <Link to='/'>Back</Link>
+                </div>} />
+        </div>)
 }
 
 const Menu = () => {
@@ -22,26 +29,21 @@ const Menu = () => {
             <ul>
                 <li><Link to='/'>Home</Link></li>
                 <li><Link to='/list'>Task List</Link></li>
-                <li><Link to='/add'>Add Task</Link></li>
             </ul>
         </div>
     )
 }
 
-const add = text => {
-  return {type : 'ADD', text : text}
-}
-
-const AddTask = (dispatch) => {
+const AddTask = () => {
     let input
-
-    return (
-        <div>
+return (
+        <div style={center}>
             <form onSubmit={e => {
                 e.preventDefault()
                 store.dispatch(add(input.value))
+                input.value = ''
             }}>
-                <input ref={node => input = node}/>
+                <input ref={node => input = node} />
                 <button type="submit">Add Task</button>
             </form>
         </div>
@@ -52,25 +54,38 @@ class List extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            tasks: ['Task 1', 'Task 2', 'Task 3']
+            tasks: []
         }
+        store.subscribe(() => {
+            this.setState({ tasks: store.getState().todos })
+        })
     }
 
-    componentWillMount () {
-        this.setState({tasks : store.getState().todos})
+    componentWillMount() {
+        this.setState({ tasks: store.getState().todos })
     }
 
     render() {
-        
         return (
-            <ul>
-                {this.state.tasks.map(task => <li>{task}</li>)}
-            </ul>
+            <div style={center}>
+                {this.state.tasks.map((task, i) =>
+                <div key={i} style={{border : 'solid 1px black', padding : '10px'}}>
+                {`#${i+1}  `}
+                        {!task.completed &&
+                            <p contentEditable="true" onBlur={e => store.dispatch(edt(e.target.textContent, i))}>{task.text}</p>}
+                        {task.completed && 
+                            <p style={{textDecoration: 'line-through'}}>{task.text}</p>}
+                        <button onClick={() => store.dispatch(del(i))}>Delete</button>
+                        <button onClick={() => store.dispatch(cpl(i))}>Complete</button>
+                </div>
+                )}
+            </div>
         )
     }
 }
 
 ReactDOM.render(
-<BrowserRouter>
-    <App />
-</BrowserRouter>, document.getElementById('root'));
+    <BrowserRouter>
+        <App />
+    </BrowserRouter>,
+    document.getElementById('root'));
