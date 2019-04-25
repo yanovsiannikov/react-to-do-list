@@ -1,14 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import { BrowserRouter, Link, Route} from 'react-router-dom';
+import { BrowserRouter, Link, Route } from 'react-router-dom';
+
 import { createStore } from 'redux';
-import taskList from './reducers/add';
-import {add,del,edt,cpl} from './actions/index'; //Вынес action's в отдельный фаил
+import { Provider } from 'react-redux';
+import reducers from './reducers/reducer';
 
-const store = createStore(taskList);
+import AddTodo from './components/AddTask'
+import List from './components/List'
 
-const center = {width : '50%',marginLeft : 'auto',marginRight : 'auto'};
+const store = createStore(reducers,
+    window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__())
 
 const App = () => {
     return (
@@ -17,7 +20,7 @@ const App = () => {
             <Route exact path='/list' render={() =>
                 <div>
                     <List />
-                    <AddTask />
+                    <AddTodo />
                     <Link to='/'>Back</Link>
                 </div>} />
         </div>)
@@ -34,58 +37,10 @@ const Menu = () => {
     )
 }
 
-const AddTask = () => {
-    let input
-return (
-        <div style={center}>
-            <form onSubmit={e => {
-                e.preventDefault()
-                store.dispatch(add(input.value))
-                input.value = ''
-            }}>
-                <input ref={node => input = node} />
-                <button type="submit">Add Task</button>
-            </form>
-        </div>
-    )
-}
-
-class List extends React.Component {
-    constructor(props) {
-        super(props)
-        this.state = {
-            tasks: []
-        }
-        store.subscribe(() => {
-            this.setState({ tasks: store.getState().todos })
-        })
-    }
-
-    componentWillMount() {
-        this.setState({ tasks: store.getState().todos })
-    }
-
-    render() {
-        return (
-            <div style={center}>
-                {this.state.tasks.map((task, i) =>
-                <div key={i} style={{border : 'solid 1px black', padding : '10px'}}>
-                {`#${i+1}  `}
-                        {!task.completed &&
-                            <p contentEditable="true" onBlur={e => store.dispatch(edt(e.target.textContent, i))}>{task.text}</p>}
-                        {task.completed && 
-                            <p style={{textDecoration: 'line-through'}}>{task.text}</p>}
-                        <button onClick={() => store.dispatch(del(i))}>Delete</button>
-                        <button onClick={() => store.dispatch(cpl(i))}>Complete</button>
-                </div>
-                )}
-            </div>
-        )
-    }
-}
-
 ReactDOM.render(
-    <BrowserRouter>
-        <App />
-    </BrowserRouter>,
+    <Provider store={store}>
+        <BrowserRouter>
+            <App />
+        </BrowserRouter>
+    </Provider>,
     document.getElementById('root'));
