@@ -1,24 +1,21 @@
 import {ADD_TODO, DELETE_TODO, UPDATE_TODO, COMPLETE_TODO } from '../actions/actionTypes';
 
 const initialState = {
-    todos: []
+    todos: [],
 };
 
 export default (state = initialState, action) => {
    switch (action.type) {
         case ADD_TODO : 
-            return Object.assign({}, state, { todos : [...state.todos, {text: action.text, completed: false }]});
+            return { ...state, todos : [...state.todos, {text: action.text, completed: false }]};
         case DELETE_TODO :
-            return Object.assign({}, state, { todos : [...state.todos.filter((el, i) => i !== action.id)]});
+            return { ...state, todos : [...state.todos.filter((e, i) => i !== action.id)]};
         case COMPLETE_TODO :
-            return Object.assign({}, state, { todos : [...state.todos.map((el, i) => 
-                i === action.id ? {...el, completed : !el.completed} : el
-                )]});
+            return {...state, todos : [...state.todos.map((el, i) => 
+                i === action.id ? {...el, completed : !el.completed} : el)]};
         case UPDATE_TODO :
-        return Object.assign({}, state, { todos : [...state.todos.map((el, i) => 
-                i === action.id ? {...el, text : action.text} : el
-                )]});
-        default :
-            return state;
+        return {...state,  todos : [...state.todos.map((el, i) => 
+                i === action.id ? {...el, text : action.text} : el)]};
+        default : return state;
     }
 }
